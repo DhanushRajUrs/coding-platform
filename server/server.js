@@ -310,9 +310,100 @@ app.post('/api/run', async (req, res) => {
   }
 });
 
-// Placeholder for submission endpoint
+
+const db = require('./database');
+
+// Save a submission to the database.
 app.post('/api/submit', (req, res) => {
-  res.status(200).json({ ok: true, message: 'Submission received' });
+  const { participantName, problemId, language, score } = req.body;
+
+  if (
+    typeof participantName !== 'string' ||
+    !participantName.trim() ||
+    participantName.trim().length > 50
+  ) {
+    return res.status(400).json({
+      error: 'A participant name of 1–50 characters is required.'
+    });
+  }
+
+  if (
+    (typeof problemId !== 'string' && typeof problemId !== 'number') ||
+    String(problemId).trim() === ''
+  ) {
+    return res.status(400).json({ error: 'A valid problemId is required.' });
+  }
+
+  if (typeof language !== 'string' || !language.trim()) {
+    return res.status(400).json({ error: 'A language is required.' });
+  }
+
+  if (!Number.isInteger(score) || score < 0 || score > 100) {
+    return res.status(400).json({
+      error: 'Score must be an integer between 0 and 100.'
+    });
+  }
+
+  db.run(
+    `INSERT INTO submissions
+      (participant_name, problem_id, language, score)
+     VALUES (?, ?, ?, ?)`,
+    [
+      participantName.trim(),
+      String(problemId),
+      language.trim(),
+      score
+    ],
+    function (error) {
+      if (error) {
+        console.error('Failed to save submission:', error);
+        return res.status(500).json({ error: 'Could not save submission.' });
+      }
+
+      return res.status(201).json({
+        ok: true,
+        id: this.lastID,
+        message: 'Submission saved successfully.'
+      });
+    }
+  );
+});
+
+// Retrieve rankings using each participant's best score per problem.
+app.get('/api/leaderboard', (req, res) => {
+  const query = `
+    WITH best_scores AS (
+      SELECT participant_name, problem_id, MAX(score) AS best_score
+      FROM submissions
+      GROUP BY participant_name, problem_id
+    )
+    SELECT
+      participant_name AS participantName,
+      SUM(best_score) AS totalScore,
+      COUNT(*) AS problemsAttempted,
+      (
+        SELECT COUNT(*)
+        FROM submissions AS s
+        WHERE s.participant_name = best_scores.participant_name
+      ) AS submissionCount
+    FROM best_scores
+    GROUP BY participant_name
+    ORDER BY totalScore DESC, problemsAttempted DESC, participant_name ASC
+  `;
+
+  db.all(query, [], (error, rows) => {
+    if (error) {
+      console.error('Failed to retrieve leaderboard:', error);
+      return res.status(500).json({ error: 'Could not load leaderboard.' });
+    }
+
+    return res.json({
+      leaderboard: rows.map((row, index) => ({
+        rank: index + 1,
+        ...row
+      }))
+    });
+  });
 });
 
 // Optional Docker-backed secure execution endpoint

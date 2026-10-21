@@ -8,7 +8,52 @@ import detectDevTools from 'devtools-detect';
 import './App.css';
 
 function App() {
+   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
   const [currentView, setCurrentView] = useState('home');
+  const [participantName, setParticipantName] = useState('');
+const [leaderboard, setLeaderboard] = useState([]);
+const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+
+const [leaderboardError, setLeaderboardError] = useState('');
+
+useEffect(() => {
+  if (currentView !== 'leaderboard') return;
+
+  let cancelled = false;
+
+  const loadLeaderboard = async () => {
+    setLeaderboardLoading(true);
+    setLeaderboardError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/leaderboard`);
+
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!cancelled) {
+        setLeaderboard(data.leaderboard || []);
+      }
+    } catch (error) {
+      if (!cancelled) {
+        setLeaderboardError(error.message || 'Could not load leaderboard.');
+      }
+    } finally {
+      if (!cancelled) {
+        setLeaderboardLoading(false);
+      }
+    }
+  };
+
+  loadLeaderboard();
+
+  return () => {
+    cancelled = true;
+  };
+}, [currentView, API_BASE_URL]);
   const [violations, setViolations] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3600); // 1 hour in seconds
@@ -19,7 +64,7 @@ function twoSum(nums, target) {
   const [language, setLanguage] = useState('javascript');
   const [output, setOutput] = useState('');
   const [currentProblem, setCurrentProblem] = useState(0);
-  const [submissions, setSubmissions] = useState({}); 
+  const [submissions, setSubmissions] = useState({});
   const problems = [
     {
       title: 'Two Sum',
@@ -183,7 +228,7 @@ public:
     if (currentView === 'editor' && problem.templates && problem.templates[language]) {
       setCode(problem.templates[language]);
     }
-    
+
   }, [language, currentProblem, currentView]);
 
 
@@ -201,8 +246,6 @@ public:
     }
   };
 
-  // Define a dynamic base URL for API calls
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
   const formatResults = (results) => {
     if (!results || results.length === 0) return 'No results';
@@ -366,7 +409,13 @@ public:
       const submitResp = await fetch(`${API_BASE_URL}/api/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ problemId: currentProblem, language, code, score }),
+        body: JSON.stringify({
+  participantName: participantName.trim(),
+  problemId: currentProblem,
+  language,
+  code,
+  score
+}),
       });
 
       if (!submitResp.ok) {
@@ -400,6 +449,9 @@ public:
           <button onClick={() => setCurrentView('home')}>Home</button>
           <button onClick={() => setCurrentView('contests')}>Contests</button>
           <button onClick={() => setCurrentView('submissions')}>My Submissions</button>
+          <button onClick={() => setCurrentView('leaderboard')}>
+  Leaderboard
+</button>
           {currentView === 'editor' && <span className="timer">Time Left: {formatTime(timeLeft)}</span>}
           {violations > 0 && <span className="violations">Violations: {violations}</span>}
           {!isFullscreen && <button onClick={enterFullscreen}>Enter Fullscreen</button>}
@@ -428,10 +480,10 @@ public:
             <h2>Problems</h2>
             <ul>
               {problems.map((p, i) => (
-                <li key={i} onClick={() => { 
-                  setCurrentProblem(i); 
-                  setCurrentView('editor'); 
-                  setCode(p.templates[language] || '// Template not available'); 
+                <li key={i} onClick={() => {
+                  setCurrentProblem(i);
+                  setCurrentView('editor');
+                  setCode(p.templates[language] || '// Template not available');
                 }}>
                   {p.title}
                 </li>
@@ -468,7 +520,25 @@ public:
                   <option value="java">Java</option>
                 </select>
                 <button onClick={runCode}>Run Code</button>
-                <button onClick={submitCode}>Submit</button>
+
+<div className="participant-field">
+  <label htmlFor="participantName">Your display name</label>
+  <input
+    id="participantName"
+    type="text"
+    value={participantName}
+    onChange={(event) => setParticipantName(event.target.value)}
+    placeholder="Enter your display name"
+    maxLength={50}
+  />
+</div>
+
+<button
+  onClick={submitCode}
+  disabled={!participantName.trim()}
+>
+  Submit
+</button>
               </div>
               <div className="code-editor-container">
                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -524,9 +594,57 @@ public:
                 </div>
               </div>
               </div>
-            </div> 
+            </div>
           </section>
         )}
+
+{currentView === 'leaderboard' && (
+  <section className="leaderboard">
+    <h2>Leaderboard</h2>
+    <p>Rankings based on each participant's best score per problem.</p>
+
+    {leaderboardLoading && <p>Loading leaderboard...</p>}
+
+    {leaderboardError && (
+      <p role="alert">Error loading leaderboard: {leaderboardError}</p>
+    )}
+
+    {!leaderboardLoading &&
+      !leaderboardError &&
+      leaderboard.length === 0 && (
+        <p>No submissions yet. Complete a problem to appear here!</p>
+      )}
+
+    {!leaderboardLoading &&
+      !leaderboardError &&
+      leaderboard.length > 0 && (
+        <div className="leaderboard-table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Participant</th>
+                <th>Total Score</th>
+                <th>Problems Attempted</th>
+                <th>Submissions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaderboard.map((entry) => (
+                <tr key={entry.participantName}>
+                  <td>{entry.rank}</td>
+                  <td>{entry.participantName}</td>
+                  <td>{entry.totalScore}</td>
+                  <td>{entry.problemsAttempted}</td>
+                  <td>{entry.submissionCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+  </section>
+)}
         {currentView === 'submissions' && (
           <section className="submissions">
             <h2>My Submissions</h2>
@@ -536,7 +654,7 @@ public:
               <ul>
                 {Object.entries(submissions).map(([idx, sub]) => (
                   <li key={idx}>
-                    <strong>{problems[parseInt(idx)].title}</strong>: {sub.score}% 
+                    <strong>{problems[parseInt(idx)].title}</strong>: {sub.score}%
                     <details>
                       <summary>Code</summary>
                       <pre>{sub.code}</pre>
