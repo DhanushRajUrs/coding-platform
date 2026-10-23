@@ -57,7 +57,7 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '300kb' }));
 
 // Docker-backed executor for secure sandboxed runs
-const { runSubmission } = require('./executor');
+const { runSubmission, isSupportedLanguage } = require('./executor');
 
 // Add CSP and cross-origin headers
 app.use((req, res, next) => {
@@ -411,6 +411,7 @@ app.post('/execute', async (req, res) => {
   try {
     const { language, code, tests, funcName, timeLimitMs, memoryLimitMb, outputLimitBytes } = req.body;
     if (!language || !code || !Array.isArray(tests)) return res.status(400).json({ error: 'language, code and tests required' });
+    if (!isSupportedLanguage(language)) return res.status(400).json({ error: `Unsupported language: ${language}` });
 
     const results = await runSubmission({ language, code, tests, timeLimitMs: timeLimitMs || 1000, memoryLimitMb: memoryLimitMb || 256, outputLimitBytes: outputLimitBytes || 65536, funcName });
     return res.json({ results });
@@ -442,15 +443,19 @@ if (resolvedBuildPath) {
   });
 }
 
-const port = process.env.PORT || 3001;
-const server = app.listen(port, () => console.log(`Multi-language code execution server listening on port ${port}`));
+if (require.main === module) {
+  const port = process.env.PORT || 3001;
+  const server = app.listen(port, () => console.log(`Multi-language code execution server listening on port ${port}`));
 
-server.on('error', (err) => {
-  if (err && err.code === 'EADDRINUSE') {
-    console.error(`Port ${port} is in use. Please kill the other process or set PORT environment variable.`);
-    process.exit(1);
-  } else {
-    console.error('Server error:', err);
-    process.exit(1);
-  }
-});
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is in use. Please kill the other process or set PORT environment variable.`);
+      process.exit(1);
+    } else {
+      console.error('Server error:', err);
+      process.exit(1);
+    }
+  });
+}
+
+module.exports = app;

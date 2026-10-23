@@ -6,6 +6,7 @@ import 'codemirror/mode/python/python';
 import 'codemirror/mode/clike/clike';
 import detectDevTools from 'devtools-detect';
 import './App.css';
+import Timer from './Timer';
 
 function App() {
    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
@@ -450,9 +451,9 @@ public:
           <button onClick={() => setCurrentView('contests')}>Contests</button>
           <button onClick={() => setCurrentView('submissions')}>My Submissions</button>
           <button onClick={() => setCurrentView('leaderboard')}>
-  Leaderboard
-</button>
-          {currentView === 'editor' && <span className="timer">Time Left: {formatTime(timeLeft)}</span>}
+            Leaderboard
+          </button>
+          {currentView === 'editor' && <Timer timeLeft={timeLeft} />}
           {violations > 0 && <span className="violations">Violations: {violations}</span>}
           {!isFullscreen && <button onClick={enterFullscreen}>Enter Fullscreen</button>}
           {isFullscreen && <button onClick={exitFullscreen}>Exit Fullscreen</button>}

@@ -1,14 +1,41 @@
+/* Prevent page elements from extending beyond the screen */
+
+* {
+  box-sizing: border-box;
+  }
+
+html,
+body,
+#root {
+width: 100%;
+min-height: 100%;
+margin: 0;
+padding: 0;
+}
+
+body {
+overflow-x: hidden;
+}
+
+.App {
+width: 100%;
+min-width: 0;
+text-align: center;
+}
 .App {
   text-align: center;
 }
 
 .App-header {
-  background-color: #282c34;
-  padding: 10px;
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+background-color: #282c34;
+color: white;
+padding: 15px;
+width: 100%;
+box-sizing: border-box;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 15px;
 }
 
 .App-header h1 {
@@ -32,6 +59,18 @@
 .timer {
   color: yellow;
   font-weight: bold;
+  white-space: nowrap;
+}
+
+.timer-low {
+  color: #ff4d4d;
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .violations {
@@ -105,12 +144,17 @@ li:hover {
 }
 
 .code-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background: #eee;
-  gap: 10px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+flex-wrap: wrap;
+padding: 16px 20px;
+background: #f8fafc;
+border: 1px solid #e2e8f0;
+border-radius: 10px;
+gap: 12px;
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+margin-bottom: 16px;
 }
 
 .code-header > div {
@@ -167,4 +211,102 @@ li:hover {
   color: #fff;
   padding: 10px;
   overflow-x: auto;
+}
+/* Code editor toolbar buttons */
+.code-header button {
+padding: 9px 16px;
+border: none;
+border-radius: 6px;
+background: #2563eb;
+color: #ffffff;
+font-size: 14px;
+font-weight: 600;
+cursor: pointer;
+transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.code-header button:hover {
+background: #1d4ed8;
+transform: translateY(-1px);
+}
+
+.code-header button:focus-visible {
+outline: 2px solid #93c5fd;
+outline-offset: 3px;
+}
+
+.code-header button:active {
+transform: translateY(0);
+}
+/* Responsive editor layout */
+@media (max-width: 768px) {
+  .editor {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .problem-statement,
+  .code-section {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .code-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .code-header > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .code-header button,
+  .code-header select {
+    min-height: 40px;
+    max-width: 100%;
+  }
+}
+
+/* Small mobile screens */
+@media (max-width: 480px) {
+  .problem-statement,
+  .code-section {
+    padding: 12px;
+  }
+
+  .code-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .code-header > div {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .code-header > div button {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .code-header select {
+    width: 100%;
+  }
+
+  .code-header > button {
+    width: 100%;
+  }
 }
