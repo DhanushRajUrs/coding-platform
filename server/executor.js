@@ -43,6 +43,10 @@ const IMAGE_MAP = {
   js: 'coding-judge-node'
 };
 
+function isSupportedLanguage(language) {
+  return typeof language === 'string' && Object.prototype.hasOwnProperty.call(IMAGE_MAP, language.toLowerCase());
+}
+
 async function runSubmission({ language, code, tests = [], timeLimitMs = 1000, memoryLimitMb = 256, outputLimitBytes = 65536, funcName = null }) {
   if (!language || !code) throw new Error('language and code required');
   const langKey = language.toLowerCase();
@@ -199,4 +203,4 @@ async function runSubmission({ language, code, tests = [], timeLimitMs = 1000, m
   return results;
 }
 
-module.exports = { runSubmission };
+module.exports = { runSubmission, isSupportedLanguage };

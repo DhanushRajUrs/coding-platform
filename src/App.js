@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Timer from './Timer';
 import { UnControlled as CodeMirror } from 'react-codemirror2';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/javascript/javascript';
@@ -423,7 +424,7 @@ public:
           <button onClick={() => setCurrentView('home')}>Home</button>
           <button onClick={() => setCurrentView('contests')}>Contests</button>
           <button onClick={() => setCurrentView('submissions')}>My Submissions</button>
-          {currentView === 'editor' && <span className="timer">Time Left: {formatTime(timeLeft)}</span>}
+          {currentView === 'editor' && <Timer timeLeft={timeLeft} />}
           {violations > 0 && <span className="violations">Violations: {violations}</span>}
           {!isFullscreen && <button onClick={enterFullscreen}>Enter Fullscreen</button>}
           {isFullscreen && <button onClick={exitFullscreen}>Exit Fullscreen</button>}
