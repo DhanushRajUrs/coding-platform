@@ -37,7 +37,7 @@ function twoSum(nums, target) {
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [currentProblem, setCurrentProblem] = useState(0);
-  const [submissions, setSubmissions] = useState({}); 
+  const [submissions, setSubmissions] = useState({});
   const problems = [
     {
       title: 'Two Sum',
@@ -201,7 +201,7 @@ public:
     if (currentView === 'editor' && problem.templates && problem.templates[language]) {
       setCode(problem.templates[language]);
     }
-    
+
   }, [language, currentProblem, currentView]);
 
 
@@ -461,12 +461,18 @@ public:
             <h2>Problems</h2>
             <ul>
               {problems.map((p, i) => (
-                <li key={i} onClick={() => { 
-                  setCurrentProblem(i); 
-                  setCurrentView('editor'); 
-                  setCode(p.templates[language] || '// Template not available'); 
-                }}>
-                  {p.title}
+                <li key={i}>
+                  <button
+                    type="button"
+                    className="problem-select-button"
+                    onClick={() => {
+                      setCurrentProblem(i);
+                      setCurrentView('editor');
+                      setCode(p.templates[language] || '// Template not available');
+                    }}
+                  >
+                    {p.title}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -493,7 +499,13 @@ public:
                   <span>Problem {currentProblem + 1} of {problems.length}</span>
                   <button onClick={() => setCurrentProblem(Math.min(problems.length - 1, currentProblem + 1))}>Next</button>
                 </div>
-                <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                <label htmlFor="language-select">Programming language</label>
+
+                <select
+                  id="language-select"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                >
                   <option value="javascript">JavaScript</option>
                   <option value="python">Python</option>
                   <option value="c">C</option>
@@ -542,32 +554,32 @@ public:
                   </div>
                 </div>
                 <div className="test-cases-section">
-                <h3>Test Cases:</h3>
-                <div className="test-cases-list">
-                  {problem.testCases.map((tc, index) => (
-                    <div key={index} className="test-case">
-                      <div className="test-case-header">
-                        <strong>Test Case {index + 1}:</strong>
-                        {tc.stdin ? <span> (Stdin Input)</span> : <span> (Function Args)</span>}
+                  <h3>Test Cases:</h3>
+                  <div className="test-cases-list">
+                    {problem.testCases.map((tc, index) => (
+                      <div key={index} className="test-case">
+                        <div className="test-case-header">
+                          <strong>Test Case {index + 1}:</strong>
+                          {tc.stdin ? <span> (Stdin Input)</span> : <span> (Function Args)</span>}
+                        </div>
+                        <div className="test-case-content">
+                          {tc.stdin ? (
+                            <div>
+                              <div><strong>Input:</strong> {tc.stdin.split('\n').map((line, i) => <div key={i}>{line}</div>)}</div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div><strong>Input:</strong> {tc.input}</div>
+                            </div>
+                          )}
+                          <div><strong>Expected:</strong> {JSON.stringify(tc.expected)}</div>
+                        </div>
                       </div>
-                      <div className="test-case-content">
-                        {tc.stdin ? (
-                          <div>
-                            <div><strong>Input:</strong> {tc.stdin.split('\n').map((line, i) => <div key={i}>{line}</div>)}</div>
-                          </div>
-                        ) : (
-                          <div>
-                            <div><strong>Input:</strong> {tc.input}</div>
-                          </div>
-                        )}
-                        <div><strong>Expected:</strong> {JSON.stringify(tc.expected)}</div>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
-              </div>
-            </div> 
+            </div>
           </section>
         )}
         {currentView === 'submissions' && (
@@ -584,7 +596,7 @@ public:
               <ul>
                 {Object.entries(submissions).map(([idx, sub]) => (
                   <li key={idx}>
-                    <strong>{problems[parseInt(idx)].title}</strong>: {sub.score}% 
+                    <strong>{problems[parseInt(idx)].title}</strong>: {sub.score}%
                     <details>
                       <summary>Code</summary>
                       <pre>{sub.code}</pre>
@@ -599,4 +611,7 @@ public:
     </div>
   );
 }
+
+
+
 export default App;
